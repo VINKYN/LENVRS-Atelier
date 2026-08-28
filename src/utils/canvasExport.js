@@ -6,8 +6,20 @@ function getLuminance(hex) {
   if (c.length !== 6) return 0;
   const r = parseInt(c.substr(0, 2), 16) / 255;
   const g = parseInt(c.substr(2, 2), 16) / 255;
-  const b = parseInt(c.substr(4, 16), 16) / 255;
+  const b = parseInt(c.substr(4, 2), 16) / 255;
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Convert hex string to RGB array
+function hexToRgb(hex) {
+  let c = (hex || '').replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  if (c.length !== 6) return [255, 255, 255];
+  return [
+    parseInt(c.substr(0, 2), 16) || 255,
+    parseInt(c.substr(2, 2), 16) || 255,
+    parseInt(c.substr(4, 2), 16) || 255
+  ];
 }
 
 // Adjust lightness of a hex color
@@ -51,6 +63,62 @@ function getTwoLightestColors(colors) {
   return [lightest, secondLightest];
 }
 
+// Draw 4-Corner Diagonal Freeform Gradient (Illustrator Mesh Gradient style)
+function drawIllustratorFreeformGradient(ctx, targetWidth, targetHeight, color1Hex, color2Hex) {
+  // Diagonal 1: Top-Left (TL) & Bottom-Right (BR) -> color1 (Lightest)
+  // Diagonal 2: Top-Right (TR) & Bottom-Left (BL) -> color2 (2nd Lightest)
+  const c1 = hexToRgb(color1Hex);
+  const c2 = hexToRgb(color2Hex);
+
+  const W = 270;
+  const H = 480;
+  const offscreen = document.createElement('canvas');
+  offscreen.width = W;
+  offscreen.height = H;
+  const offCtx = offscreen.getContext('2d');
+  const imgData = offCtx.createImageData(W, H);
+  const data = imgData.data;
+
+  for (let y = 0; y < H; y++) {
+    const v = y / (H - 1);
+    // Smooth hermite curve (smoothstep) for silky continuous diffusion
+    const sv = v * v * (3 - 2 * v);
+    
+    for (let x = 0; x < W; x++) {
+      const u = x / (W - 1);
+      const su = u * u * (3 - 2 * u);
+
+      // Bilinear corner weights
+      const wTL = (1 - su) * (1 - sv); // Top-Left: c1
+      const wTR = su * (1 - sv);       // Top-Right: c2
+      const wBL = (1 - su) * sv;       // Bottom-Left: c2
+      const wBR = su * sv;             // Bottom-Right: c1
+
+      const weightC1 = wTL + wBR;
+      const weightC2 = wTR + wBL;
+
+      const r = Math.round(weightC1 * c1[0] + weightC2 * c2[0]);
+      const g = Math.round(weightC1 * c1[1] + weightC2 * c2[1]);
+      const b = Math.round(weightC1 * c1[2] + weightC2 * c2[2]);
+
+      const idx = (y * W + x) * 4;
+      data[idx] = r;
+      data[idx + 1] = g;
+      data[idx + 2] = b;
+      data[idx + 3] = 255;
+    }
+  }
+
+  offCtx.putImageData(imgData, 0, 0);
+
+  // Smooth bicubic upscaling to target canvas (1080x1920)
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(offscreen, 0, 0, targetWidth, targetHeight);
+  ctx.restore();
+}
+
 // Generate clean email link
 export function generateEmailSummary(colors) {
   const subject = encodeURIComponent('Mon Vêtement Personnalisé // LENVRS Atelier');
@@ -83,26 +151,9 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
 
-    // 1. Draw dynamic studio gradient using the 2 lightest colors selected
+    // 1. Draw 4-corners diagonal Freeform Mesh Gradient (Illustrator style)
     const [color1, color2] = getTwoLightestColors(colors);
-
-    const bgGradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-    bgGradient.addColorStop(0.0, color2);
-    bgGradient.addColorStop(0.26, color1);
-    bgGradient.addColorStop(0.65, color2);
-    bgGradient.addColorStop(1.0, adjustHexLightness(color2, -0.06));
-
-    ctx.fillStyle = bgGradient;
-    ctx.fillRect(0, 0, 1080, 1920);
-
-    // Soft central glow layer for satin studio depth
-    const radialGlow = ctx.createRadialGradient(540, 650, 80, 540, 650, 780);
-    radialGlow.addColorStop(0.0, 'rgba(255, 255, 255, 0.28)');
-    radialGlow.addColorStop(0.5, 'rgba(255, 255, 255, 0.08)');
-    radialGlow.addColorStop(1.0, 'rgba(0, 0, 0, 0.04)');
-
-    ctx.fillStyle = radialGlow;
-    ctx.fillRect(0, 0, 1080, 1920);
+    drawIllustratorFreeformGradient(ctx, 1080, 1920, color1, color2);
 
     const drawContent = () => {
       // 2. Outer Thin Dark Border
