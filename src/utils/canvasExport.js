@@ -1,3 +1,56 @@
+// Calculate perceived luminance (ITU-R BT.709)
+function getLuminance(hex) {
+  if (!hex || typeof hex !== 'string') return 0;
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  if (c.length !== 6) return 0;
+  const r = parseInt(c.substr(0, 2), 16) / 255;
+  const g = parseInt(c.substr(2, 2), 16) / 255;
+  const b = parseInt(c.substr(4, 16), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Adjust lightness of a hex color
+function adjustHexLightness(hex, delta) {
+  if (!hex || typeof hex !== 'string') return hex;
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  if (c.length !== 6) return hex;
+  
+  let r = parseInt(c.substr(0, 2), 16);
+  let g = parseInt(c.substr(2, 2), 16);
+  let b = parseInt(c.substr(4, 2), 16);
+  
+  r = Math.max(0, Math.min(255, Math.round(r + delta * 255)));
+  g = Math.max(0, Math.min(255, Math.round(g + delta * 255)));
+  b = Math.max(0, Math.min(255, Math.round(b + delta * 255)));
+  
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// Extract the 2 lightest colors selected on the garment
+function getTwoLightestColors(colors) {
+  const allHexes = Object.values(colors || {}).filter(c => typeof c === 'string' && c.startsWith('#'));
+  const uniqueHexes = Array.from(new Set(allHexes));
+
+  if (uniqueHexes.length === 0) {
+    return ['#ffffff', '#dadde3'];
+  }
+
+  // Sort by perceived luminance descending (lightest first)
+  uniqueHexes.sort((a, b) => getLuminance(b) - getLuminance(a));
+
+  const lightest = uniqueHexes[0];
+  let secondLightest = uniqueHexes[1] || adjustHexLightness(lightest, -0.12);
+
+  // If both colors are almost identical pure white, provide elegant silver studio gradient
+  if (getLuminance(lightest) > 0.96 && getLuminance(secondLightest) > 0.96) {
+    return ['#ffffff', '#dadde3'];
+  }
+
+  return [lightest, secondLightest];
+}
+
 // Generate clean email link
 export function generateEmailSummary(colors) {
   const subject = encodeURIComponent('Mon Vêtement Personnalisé // LENVRS Atelier');
@@ -30,9 +83,26 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
 
-    // 1. Load the official background texture
-    const bgImg = new Image();
-    bgImg.crossOrigin = 'anonymous';
+    // 1. Draw dynamic studio gradient using the 2 lightest colors selected
+    const [color1, color2] = getTwoLightestColors(colors);
+
+    const bgGradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+    bgGradient.addColorStop(0.0, color2);
+    bgGradient.addColorStop(0.26, color1);
+    bgGradient.addColorStop(0.65, color2);
+    bgGradient.addColorStop(1.0, adjustHexLightness(color2, -0.06));
+
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, 1080, 1920);
+
+    // Soft central glow layer for satin studio depth
+    const radialGlow = ctx.createRadialGradient(540, 650, 80, 540, 650, 780);
+    radialGlow.addColorStop(0.0, 'rgba(255, 255, 255, 0.28)');
+    radialGlow.addColorStop(0.5, 'rgba(255, 255, 255, 0.08)');
+    radialGlow.addColorStop(1.0, 'rgba(0, 0, 0, 0.04)');
+
+    ctx.fillStyle = radialGlow;
+    ctx.fillRect(0, 0, 1080, 1920);
 
     const drawContent = () => {
       // 2. Outer Thin Dark Border
@@ -139,22 +209,6 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
       logoImg.src = `${import.meta.env.BASE_URL}logo.png`;
     };
 
-    bgImg.onload = () => {
-      ctx.drawImage(bgImg, 0, 0, 1080, 1920);
-      drawContent();
-    };
-
-    bgImg.onerror = () => {
-      const bgGradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-      bgGradient.addColorStop(0.0, '#dadde3');
-      bgGradient.addColorStop(0.25, '#eff1f5');
-      bgGradient.addColorStop(0.65, '#d3d6dd');
-      bgGradient.addColorStop(1.0, '#b8bcc5');
-      ctx.fillStyle = bgGradient;
-      ctx.fillRect(0, 0, 1080, 1920);
-      drawContent();
-    };
-
-    bgImg.src = `${import.meta.env.BASE_URL}story-background.png`;
+    drawContent();
   });
 }
