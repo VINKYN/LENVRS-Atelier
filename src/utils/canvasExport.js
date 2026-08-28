@@ -22,57 +22,22 @@ function hexToRgb(hex) {
   ];
 }
 
-// Convert Hex to HSL
-function hexToHsl(hex) {
-  let c = (hex || '').replace('#', '');
-  if (c.length === 3) c = c.split('').map(x => x + x).join('');
-  let r = parseInt(c.substr(0, 2), 16) / 255 || 0;
-  let g = parseInt(c.substr(2, 2), 16) / 255 || 0;
-  let b = parseInt(c.substr(4, 2), 16) / 255 || 0;
-
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
-
-  if (max === min) {
-    h = s = 0;
-  } else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return [h, s, l];
-}
-
-// Convert HSL to Hex
-function hslToHex(h, s, l) {
-  let r, g, b;
-  if (s === 0) {
-    r = g = b = l;
-  } else {
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
-  }
-  const toHex = x => Math.max(0, Math.min(255, Math.round(x * 255))).toString(16).padStart(2, '0');
+// Convert RGB to Hex
+function rgbToHex(r, g, b) {
+  const toHex = x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// Extract the single lightest fabric color and generate softened studio diagonal tones
+// Blend two RGB colors with a specific weight
+function mixRgb(rgb1, rgb2, weight) {
+  return [
+    rgb1[0] * (1 - weight) + rgb2[0] * weight,
+    rgb1[1] * (1 - weight) + rgb2[1] * weight,
+    rgb1[2] * (1 - weight) + rgb2[2] * weight
+  ];
+}
+
+// Extract the lightest fabric color and generate the luxury editorial studio wash
 function getLightestSoftenedTones(colors) {
   // 1. Exclude all topstitches / surpiqûres
   const fabricHexes = Object.entries(colors || {})
@@ -82,30 +47,32 @@ function getLightestSoftenedTones(colors) {
   const uniqueHexes = Array.from(new Set(fabricHexes));
 
   if (uniqueHexes.length === 0) {
-    return { c1: '#ffffff', c2: '#d8dbe2' };
+    return { c1: '#ffffff', c2: '#dce0e8' };
   }
 
-  // 2. Sort by perceived luminance descending (absolute lightest first)
+  // 2. Sort by perceived luminance descending (absolute lightest fabric first)
   uniqueHexes.sort((a, b) => getLuminance(b) - getLuminance(a));
   const absoluteLightest = uniqueHexes[0];
+  const tintRgb = hexToRgb(absoluteLightest);
 
-  const [h, s, l] = hexToHsl(absoluteLightest);
+  // 3. Base Illustrator Studio Satin Palette
+  const base1 = [255, 255, 255]; // Pure white highlight
+  const base2 = [220, 224, 232]; // Studio satin silver depth
 
-  // If pure white or near white, return classic studio silver satin
-  if (l > 0.96) {
-    return { c1: '#ffffff', c2: '#d8dbe2' };
+  // If already pure white / silver, return crisp silver satin
+  if (tintRgb[0] > 245 && tintRgb[1] > 245 && tintRgb[2] > 245) {
+    return { c1: '#ffffff', c2: '#dce0e8' };
   }
 
-  // Lower saturation / soften tint for a subtle, high-end editorial studio atmosphere
-  const softenedS = Math.min(s * 0.42, 0.30);
+  // 4. Inject a delicate 18% - 24% tint wash into the luxury satin base
+  // This keeps the backdrop pristine and bright, preventing any muddy/mustard tones
+  const c1Rgb = mixRgb(base1, tintRgb, 0.18);
+  const c2Rgb = mixRgb(base2, tintRgb, 0.25);
 
-  // Diagonal 1 (TL & BR): Ultra-luminous soft highlight
-  const c1 = hslToHex(h, Math.min(softenedS, 0.18), Math.min(0.97, Math.max(l + 0.14, 0.93)));
-
-  // Diagonal 2 (TR & BL): Softened, refined pastel depth
-  const c2 = hslToHex(h, softenedS, Math.min(0.88, Math.max(l - 0.05, 0.82)));
-
-  return { c1, c2 };
+  return {
+    c1: rgbToHex(...c1Rgb),
+    c2: rgbToHex(...c2Rgb)
+  };
 }
 
 // Draw 4-Corner Diagonal Freeform Gradient (Illustrator Mesh Gradient style)
@@ -196,7 +163,7 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
 
-    // 1. Draw 4-corners diagonal Freeform Mesh Gradient based on the single lightest fabric color (softened & illuminated)
+    // 1. Draw 4-corners diagonal Freeform Mesh Gradient with luxury silk wash
     const { c1, c2 } = getLightestSoftenedTones(colors);
     drawIllustratorFreeformGradient(ctx, 1080, 1920, c1, c2);
 
