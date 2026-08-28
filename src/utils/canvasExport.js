@@ -40,10 +40,13 @@ function adjustHexLightness(hex, delta) {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-// Extract the 2 lightest colors selected on the garment
+// Extract the 2 lightest colors selected on the garment (excluding topstitches / surpiqûres)
 function getTwoLightestColors(colors) {
-  const allHexes = Object.values(colors || {}).filter(c => typeof c === 'string' && c.startsWith('#'));
-  const uniqueHexes = Array.from(new Set(allHexes));
+  const fabricHexes = Object.entries(colors || {})
+    .filter(([key, val]) => !key.toLowerCase().includes('topstitch') && typeof val === 'string' && val.startsWith('#'))
+    .map(([, val]) => val);
+
+  const uniqueHexes = Array.from(new Set(fabricHexes));
 
   if (uniqueHexes.length === 0) {
     return ['#ffffff', '#dadde3'];
