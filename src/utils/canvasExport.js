@@ -22,24 +22,58 @@ function hexToRgb(hex) {
   ];
 }
 
-// Convert RGB to Hex
-function rgbToHex(r, g, b) {
-  const toHex = x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0');
+// Convert Hex to HSL
+function hexToHsl(hex) {
+  let c = (hex || '').replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const r = parseInt(c.substr(0, 2), 16) / 255;
+  const g = parseInt(c.substr(2, 2), 16) / 255;
+  const b = parseInt(c.substr(4, 2), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return [h * 360, s, l];
+}
+
+// Convert HSL to Hex
+function hslToHex(h, s, l) {
+  h = (h % 360 + 360) % 360;
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  const toHex = val => Math.max(0, Math.min(255, Math.round((val + m) * 255))).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// Blend two RGB colors with a specific weight
-function mixRgb(rgb1, rgb2, weight) {
-  return [
-    rgb1[0] * (1 - weight) + rgb2[0] * weight,
-    rgb1[1] * (1 - weight) + rgb2[1] * weight,
-    rgb1[2] * (1 - weight) + rgb2[2] * weight
-  ];
+// Soften any color into a very subtle, light, airy studio tone
+function getSoftenedTone(hex, targetLightness, maxSat) {
+  const [h, s, l] = hexToHsl(hex);
+  const softS = Math.min(s * 0.35, maxSat);
+  const softL = Math.max(l, targetLightness);
+  return hslToHex(h, softS, softL);
 }
 
-// Extract the lightest fabric color and generate the luxury editorial studio wash
-function getLightestSoftenedTones(colors) {
-  // 1. Exclude all topstitches / surpiqûres
+// Extract the 2 lightest fabric colors (excluding topstitches) and soften them into subtle gradient tones
+function getTwoLightestSoftenedTones(colors) {
+  // 1. Filter out all topstitches / surpiqûres
   const fabricHexes = Object.entries(colors || {})
     .filter(([key, val]) => !key.toLowerCase().includes('topstitch') && typeof val === 'string' && val.startsWith('#'))
     .map(([, val]) => val);
@@ -50,34 +84,25 @@ function getLightestSoftenedTones(colors) {
     return { c1: '#ffffff', c2: '#dce0e8' };
   }
 
-  // 2. Sort by perceived luminance descending (absolute lightest fabric first)
+  // 2. Sort by luminance descending (lightest first)
   uniqueHexes.sort((a, b) => getLuminance(b) - getLuminance(a));
-  const absoluteLightest = uniqueHexes[0];
-  const tintRgb = hexToRgb(absoluteLightest);
 
-  // 3. Base Light Studio Palette (Ultra-luminous and soft as before)
-  const base1 = [255, 255, 255]; // Pure white highlight
-  const base2 = [220, 224, 232]; // Soft luminous silver (#dce0e8)
+  const hex1 = uniqueHexes[0];
+  const hex2 = uniqueHexes.length > 1 ? uniqueHexes[1] : hex1;
 
-  // If pure white / silver
-  if (tintRgb[0] > 245 && tintRgb[1] > 245 && tintRgb[2] > 245) {
-    return { c1: '#ffffff', c2: '#dce0e8' };
-  }
+  // 3. Make both colors very light, delicate and subtle
+  const c1 = getSoftenedTone(hex1, 0.95, 0.18);
+  const c2 = uniqueHexes.length > 1 
+    ? getSoftenedTone(hex2, 0.89, 0.22)
+    : getSoftenedTone(hex1, 0.89, 0.22);
 
-  // 4. Inject a delicate 18% - 24% tint wash into the luxury base
-  const c1Rgb = mixRgb(base1, tintRgb, 0.18);
-  const c2Rgb = mixRgb(base2, tintRgb, 0.25);
-
-  return {
-    c1: rgbToHex(...c1Rgb),
-    c2: rgbToHex(...c2Rgb)
-  };
+  return { c1, c2 };
 }
 
 // Draw 4-Corner Diagonal Freeform Gradient (Illustrator Mesh Gradient style)
 function drawIllustratorFreeformGradient(ctx, targetWidth, targetHeight, color1Hex, color2Hex) {
-  // Diagonal 1: Top-Left (TL) & Bottom-Right (BR) -> c1 (Lightest Highlight)
-  // Diagonal 2: Top-Right (TR) & Bottom-Left (BL) -> c2 (Softened Tone)
+  // Diagonal 1: Top-Left (TL) & Bottom-Right (BR) -> c1 (Lightest Tone)
+  // Diagonal 2: Top-Right (TR) & Bottom-Left (BL) -> c2 (2nd Lightest Tone)
   const c1 = hexToRgb(color1Hex);
   const c2 = hexToRgb(color2Hex);
 
@@ -162,8 +187,8 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
 
-    // 1. Draw 4-corners diagonal Freeform Mesh Gradient with luxury silk wash
-    const { c1, c2 } = getLightestSoftenedTones(colors);
+    // 1. Draw 4-corners diagonal Freeform Mesh Gradient with 2 lightest softened fabric colors
+    const { c1, c2 } = getTwoLightestSoftenedTones(colors);
     drawIllustratorFreeformGradient(ctx, 1080, 1920, c1, c2);
 
     const drawContent = () => {
@@ -182,7 +207,7 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
         const logoY = 125;
         ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
 
-        // 4. Draw Perfectly Proportioned 3D Garment (Matching Photo 2)
+        // 4. Draw Perfectly Proportioned 3D Garment
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
