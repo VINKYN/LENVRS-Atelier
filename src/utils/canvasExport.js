@@ -215,9 +215,9 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
           const srcX = (img.width - srcSize) / 2;
           const srcY = (img.height - srcSize) / 2;
 
-          const drawSize = 920;
+          const drawSize = 780;
           const drawX = (1080 - drawSize) / 2;
-          const drawY = 295;
+          const drawY = 365;
 
           ctx.drawImage(img, srcX, srcY, srcSize, srcSize, drawX, drawY, drawSize, drawSize);
 
