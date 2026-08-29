@@ -35,16 +35,18 @@ export default function CameraDirector() {
 
   useEffect(() => {
     if (cameraFocus?.position && cameraFocus?.target) {
-      targetPosition.current.set(
-        cameraFocus.position[0],
-        cameraFocus.position[1],
-        cameraFocus.position[2]
-      );
-      targetLookAt.current.set(
-        cameraFocus.target[0],
-        cameraFocus.target[1],
-        cameraFocus.target[2]
-      );
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+      const posX = cameraFocus.position[0];
+      const posY = isMobile ? cameraFocus.position[1] - 0.04 : cameraFocus.position[1];
+      const posZ = isMobile ? cameraFocus.position[2] * 1.22 : cameraFocus.position[2];
+
+      const tgtX = cameraFocus.target[0];
+      const tgtY = isMobile ? cameraFocus.target[1] - 0.04 : cameraFocus.target[1];
+      const tgtZ = cameraFocus.target[2];
+
+      targetPosition.current.set(posX, posY, posZ);
+      targetLookAt.current.set(tgtX, tgtY, tgtZ);
 
       // Compute spherical coordinates relative to the target center
       const targetOffset = new THREE.Vector3().subVectors(targetPosition.current, targetLookAt.current);
