@@ -47,7 +47,7 @@ function getLightestSoftenedTones(colors) {
   const uniqueHexes = Array.from(new Set(fabricHexes));
 
   if (uniqueHexes.length === 0) {
-    return { c1: '#ffffff', c2: '#dce0e8' };
+    return { c1: '#ffffff', c2: '#c8ced8' };
   }
 
   // 2. Sort by perceived luminance descending (absolute lightest fabric first)
@@ -55,17 +55,16 @@ function getLightestSoftenedTones(colors) {
   const absoluteLightest = uniqueHexes[0];
   const tintRgb = hexToRgb(absoluteLightest);
 
-  // 3. Base Illustrator Studio Satin Palette
+  // 3. Base Illustrator Studio Satin Palette (Rich metallic contrast as in Photo 2)
   const base1 = [255, 255, 255]; // Pure white highlight
-  const base2 = [220, 224, 232]; // Studio satin silver depth
+  const base2 = [200, 206, 216]; // Studio satin silver depth (#c8ced8)
 
-  // If already pure white / silver, return crisp silver satin
+  // If pure white / silver
   if (tintRgb[0] > 245 && tintRgb[1] > 245 && tintRgb[2] > 245) {
-    return { c1: '#ffffff', c2: '#dce0e8' };
+    return { c1: '#ffffff', c2: '#c8ced8' };
   }
 
   // 4. Inject a delicate 18% - 24% tint wash into the luxury satin base
-  // This keeps the backdrop pristine and bright, preventing any muddy/mustard tones
   const c1Rgb = mixRgb(base1, tintRgb, 0.18);
   const c2Rgb = mixRgb(base2, tintRgb, 0.25);
 
@@ -183,12 +182,12 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
         const logoY = 125;
         ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
 
-        // 4. Draw Undistorted, Perfectly Proportioned 3D Garment
+        // 4. Draw Perfectly Proportioned 3D Garment (Matching Photo 2)
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          const maxW = 960;
-          const maxH = 940;
+          const maxW = 720;
+          const maxH = 800;
           const imgAspect = img.width / img.height;
           let drawW, drawH;
 
@@ -201,7 +200,7 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
           }
 
           const imgX = (1080 - drawW) / 2;
-          const imgY = 285 + (maxH - drawH) / 2;
+          const imgY = 320 + (maxH - drawH) / 2;
 
           ctx.drawImage(img, imgX, imgY, drawW, drawH);
 

@@ -36,65 +36,52 @@ function Loader() {
   );
 }
 
-// Device-Independent Ultra-HD Studio Snapshot Bridge (Exact same output on PC & Mobile)
+// 100% Identical Studio Lighting & Pipeline Snapshot (Zero Overexposure, Full Sleeves on both PC & Mobile)
 function CanvasSnapshotBridge() {
-  const { gl, scene } = useThree();
+  const { gl, scene, camera } = useThree();
   const setCaptureHandler = useCustomizerStore(state => state.setCaptureHandler);
 
   useEffect(() => {
     setCaptureHandler(() => {
       try {
-        const width = 1200;
-        const height = 1200;
+        // 1. Save original interactive camera state
+        const origPos = camera.position.clone();
+        const origRot = camera.rotation.clone();
+        const origFov = camera.fov;
 
-        // 1. Dedicated Studio Snapshot Camera (Aspect 1.0, 50mm FOV 28°)
-        const snapshotCamera = new THREE.PerspectiveCamera(28, 1.0, 0.1, 50);
-        snapshotCamera.position.set(0, -0.01, 2.50);
-        snapshotCamera.lookAt(0, -0.01, 0);
-        snapshotCamera.updateProjectionMatrix();
+        // 2. Exact Studio 50mm Front View (Z = 4.4, lookAt [0, -0.05, 0])
+        camera.position.set(0, -0.05, 4.4);
+        camera.lookAt(0, -0.05, 0);
 
-        // 2. High-precision Offscreen WebGLRenderTarget
-        const renderTarget = new THREE.WebGLRenderTarget(width, height, {
-          format: THREE.RGBAFormat,
-          type: THREE.UnsignedByteType,
-          colorSpace: THREE.SRGBColorSpace,
-          samples: 4
-        });
-
-        // 3. Render scene offscreen with studio lighting & materials
-        const originalRenderTarget = gl.getRenderTarget();
-        gl.setRenderTarget(renderTarget);
-        gl.clear();
-        gl.render(scene, snapshotCamera);
-        gl.setRenderTarget(originalRenderTarget);
-
-        // 4. Extract pixel buffer from GPU
-        const pixelBuffer = new Uint8Array(width * height * 4);
-        gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixelBuffer);
-        renderTarget.dispose();
-
-        // 5. Flip Y axis into 2D Canvas buffer (WebGL Y inversion fix)
-        const canvas2d = document.createElement('canvas');
-        canvas2d.width = width;
-        canvas2d.height = height;
-        const ctx2d = canvas2d.getContext('2d');
-        const imgData = ctx2d.createImageData(width, height);
-
-        for (let y = 0; y < height; y++) {
-          const srcY = height - 1 - y;
-          const srcRowStart = srcY * width * 4;
-          const dstRowStart = y * width * 4;
-          imgData.data.set(pixelBuffer.subarray(srcRowStart, srcRowStart + width * 4), dstRowStart);
+        // 3. Adapt FOV so narrow mobile screens capture the full horizontal width (sleeves) exactly like PC
+        const aspect = gl.domElement.width / gl.domElement.height;
+        if (aspect < 1.0) {
+          const halfFovRad = (28 * Math.PI) / 360;
+          const adaptedHalfFov = Math.atan(Math.tan(halfFovRad) / aspect);
+          camera.fov = (adaptedHalfFov * 360) / Math.PI;
+        } else {
+          camera.fov = 28;
         }
+        camera.updateProjectionMatrix();
 
-        ctx2d.putImageData(imgData, 0, 0);
-        return canvas2d.toDataURL('image/png');
+        // 4. Render through the live studio pipeline (perfect ACESFilmic tone mapping & shadow quality)
+        gl.render(scene, camera);
+        const dataUrl = gl.domElement.toDataURL('image/png');
+
+        // 5. Restore user camera
+        camera.position.copy(origPos);
+        camera.rotation.copy(origRot);
+        camera.fov = origFov;
+        camera.updateProjectionMatrix();
+        gl.render(scene, camera);
+
+        return dataUrl;
       } catch (err) {
         console.error('Snapshot capture error:', err);
         return null;
       }
     });
-  }, [gl, scene, setCaptureHandler]);
+  }, [gl, scene, camera, setCaptureHandler]);
 
   return null;
 }
