@@ -13,18 +13,23 @@ export default function CameraDirector() {
 
   const isMobileInitial = typeof window !== 'undefined' && window.innerWidth < 768;
 
+  const initPosX = (cameraFocus?.position?.[0] ?? 0) * (isMobileInitial ? 1.35 : 1);
+  const initPosZ = (cameraFocus?.position?.[2] ?? 4.4) * (isMobileInitial ? 1.35 : 1);
+  const initHDist = Math.sqrt(initPosX * initPosX + initPosZ * initPosZ);
+  const initYOffset = isMobileInitial ? -initHDist * 0.078 : 0;
+
   const targetPosition = useRef(
     new THREE.Vector3(
-      cameraFocus?.position?.[0] ?? 0,
-      (cameraFocus?.position?.[1] ?? -0.05) - (isMobileInitial ? 0.46 : 0),
-      (cameraFocus?.position?.[2] ?? 4.4) * (isMobileInitial ? 1.35 : 1)
+      initPosX,
+      (cameraFocus?.position?.[1] ?? -0.05) + initYOffset,
+      initPosZ
     )
   );
 
   const targetLookAt = useRef(
     new THREE.Vector3(
       cameraFocus?.target?.[0] ?? 0,
-      (cameraFocus?.target?.[1] ?? -0.08) - (isMobileInitial ? 0.46 : 0),
+      (cameraFocus?.target?.[1] ?? -0.08) + initYOffset,
       cameraFocus?.target?.[2] ?? 0
     )
   );
@@ -39,14 +44,30 @@ export default function CameraDirector() {
     if (cameraFocus?.position && cameraFocus?.target) {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-      // Lowering camera and lookAt target lifts the 3D model UP in screen space into the upper 2/3 area
-      const posX = cameraFocus.position[0];
-      const posY = isMobile ? cameraFocus.position[1] - 0.46 : cameraFocus.position[1];
-      const posZ = isMobile ? cameraFocus.position[2] * 1.35 : cameraFocus.position[2];
+      let posX = cameraFocus.position[0];
+      let posY = cameraFocus.position[1];
+      let posZ = cameraFocus.position[2];
 
-      const tgtX = cameraFocus.target[0];
-      const tgtY = isMobile ? cameraFocus.target[1] - 0.46 : cameraFocus.target[1];
-      const tgtZ = cameraFocus.target[2];
+      let tgtX = cameraFocus.target[0];
+      let tgtY = cameraFocus.target[1];
+      let tgtZ = cameraFocus.target[2];
+
+      if (isMobile) {
+        // Calculate distance on horizontal plane
+        const hDist = Math.sqrt(posX * posX + posZ * posZ);
+
+        // Dynamic zoom scaling on mobile so close-up steps don't crop and full body is well-framed
+        const scaleFactor = hDist < 2.0 ? 1.60 : (hDist < 3.2 ? 1.45 : 1.35);
+        posX *= scaleFactor;
+        posZ *= scaleFactor;
+
+        const newHDist = Math.sqrt(posX * posX + posZ * posZ);
+
+        // Exact vertical perspective offset to center the focused part in the upper 66% mobile viewing zone
+        const yOffset = -newHDist * 0.078;
+        posY += yOffset;
+        tgtY += yOffset;
+      }
 
       targetPosition.current.set(posX, posY, posZ);
       targetLookAt.current.set(tgtX, tgtY, tgtZ);
