@@ -49,8 +49,8 @@ function CanvasSnapshotBridge() {
         const origRot = camera.rotation.clone();
         const origFov = camera.fov;
 
-        // 2. Exact Studio 50mm Front View (Z = 4.4, lookAt [0, -0.05, 0])
-        camera.position.set(0, -0.05, 4.4);
+        // 2. Exact Studio 50mm Front View (Z = 3.00 for full frame garment, lookAt [0, -0.05, 0])
+        camera.position.set(0, -0.05, 3.00);
         camera.lookAt(0, -0.05, 0);
 
         // 3. Adapt FOV so narrow mobile screens capture the full horizontal width (sleeves) exactly like PC

@@ -207,27 +207,19 @@ export async function generateInstagramStoryCard(snapshotDataUrl, colors, instag
         const logoY = 125;
         ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
 
-        // 4. Draw Perfectly Proportioned 3D Garment
+        // 4. Draw Undistorted, Beautifully Sized 3D Garment (Square Crop with Perfect Framing)
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          const maxW = 720;
-          const maxH = 800;
-          const imgAspect = img.width / img.height;
-          let drawW, drawH;
+          const srcSize = Math.min(img.width, img.height);
+          const srcX = (img.width - srcSize) / 2;
+          const srcY = (img.height - srcSize) / 2;
 
-          if (imgAspect > maxW / maxH) {
-            drawW = maxW;
-            drawH = maxW / imgAspect;
-          } else {
-            drawH = maxH;
-            drawW = maxH * imgAspect;
-          }
+          const drawSize = 920;
+          const drawX = (1080 - drawSize) / 2;
+          const drawY = 295;
 
-          const imgX = (1080 - drawW) / 2;
-          const imgY = 320 + (maxH - drawH) / 2;
-
-          ctx.drawImage(img, imgX, imgY, drawW, drawH);
+          ctx.drawImage(img, srcX, srcY, srcSize, srcSize, drawX, drawY, drawSize, drawSize);
 
           // 5. Sub-headline: LVRW3-ATELIER (Montserrat Light)
           ctx.fillStyle = '#111111';
