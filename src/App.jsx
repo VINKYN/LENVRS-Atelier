@@ -55,41 +55,41 @@ export default function App() {
         <TShirtViewer />
 
         {/* Floating Top-Left Official Brand Logo */}
-        <div className="absolute top-6 left-7 z-20 pointer-events-auto">
+        <div className="absolute top-3 left-4 md:top-6 md:left-7 z-20 pointer-events-auto">
           <img
             src={`${import.meta.env.BASE_URL}logo.png`}
             alt="LENVRS Atelier"
-            className="h-12 sm:h-14 w-auto object-contain select-none"
+            className="h-8 sm:h-10 md:h-14 w-auto object-contain select-none"
             draggable={false}
           />
         </div>
 
         {/* Floating Top-Right Action Controls (Sharp Rectangles) */}
-        <div className="absolute top-6 right-7 z-20 flex items-center gap-2 pointer-events-auto">
+        <div className="absolute top-3 right-4 md:top-6 md:right-7 z-20 flex items-center gap-1.5 md:gap-2 pointer-events-auto">
           {/* Undo / Redo */}
           <div className="flex items-center bg-white/95 border border-[#e5e5e5] rounded-none p-0.5 shadow-xs backdrop-blur-xs">
             <button
               onClick={undo}
               disabled={historyPast.length === 0}
-              className="p-1.5 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 disabled:hover:bg-transparent transition-all"
+              className="p-1 md:p-1.5 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 disabled:hover:bg-transparent transition-all"
               title="Annuler"
             >
-              <Undo2 className="w-4 h-4" />
+              <Undo2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </button>
             <button
               onClick={redo}
               disabled={historyFuture.length === 0}
-              className="p-1.5 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 disabled:hover:bg-transparent transition-all"
+              className="p-1 md:p-1.5 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 disabled:hover:bg-transparent transition-all"
               title="Rétablir"
             >
-              <Redo2 className="w-4 h-4" />
+              <Redo2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </button>
           </div>
 
           {/* 360 Auto-Rotate (Pure 360° Text Badge) */}
           <button
             onClick={toggleAutoRotate}
-            className={`px-3 py-2 rounded-none border text-xs font-bold tracking-tight transition-all active:scale-95 shadow-xs font-sans ${
+            className={`px-2 py-1.5 md:px-3 md:py-2 rounded-none border text-[11px] md:text-xs font-bold tracking-tight transition-all active:scale-95 shadow-xs font-sans ${
               autoRotate
                 ? 'bg-[#111111] text-white border-[#111111]'
                 : 'bg-white/95 border-[#e5e5e5] text-[#111111] hover:bg-[#f0f0f0] backdrop-blur-xs'
@@ -102,20 +102,20 @@ export default function App() {
           {/* Primary CTA: "Terminé" */}
           <button
             onClick={() => setShareModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2 rounded-none bg-[#111111] text-white font-medium text-xs sm:text-sm tracking-wide hover:bg-black transition-all active:scale-95 shadow-xs ml-1"
+            className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-5 md:py-2 rounded-none bg-[#111111] text-white font-medium text-xs md:text-sm tracking-wide hover:bg-black transition-all active:scale-95 shadow-xs ml-0.5 md:ml-1"
           >
-            <Share2 className="w-3.5 h-3.5" />
+            <Share2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
             <span>Terminé</span>
           </button>
         </div>
 
-        {/* Floating Bottom-Center View Presets */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        {/* Floating Bottom-Center View Presets (Floats above 1/3 drawer on mobile, standard on desktop) */}
+        <div className="absolute bottom-[35.5vh] md:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto scale-90 md:scale-100 origin-bottom">
           <ViewPresets />
         </div>
       </main>
 
-      {/* RIGHT: Lateral Control Panel */}
+      {/* RIGHT: Lateral Control Panel (Desktop: Completely untouched) */}
       <aside className="hidden md:flex w-[380px] lg:w-[410px] flex-shrink-0 h-full flex-col bg-white border-l border-[#e5e5e5] z-20 p-7 pt-7 pb-4 shadow-xs">
         {/* Step Navigation Bar */}
         <div className="flex-shrink-0 mb-3">
@@ -126,7 +126,7 @@ export default function App() {
         <ColorPalette />
       </aside>
 
-      {/* MOBILE BOTTOM DRAWER */}
+      {/* MOBILE BOTTOM DRAWER (Mobile: strictly 1/3 of the screen height) */}
       <MobileDrawer />
 
       {/* SHARE / EXPORT MODAL */}
