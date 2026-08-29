@@ -164,8 +164,8 @@ export default function App() {
           </button>
         </div>
 
-        {/* Floating Bottom-Center View Presets (Floats cleanly above 34vh drawer on mobile, standard on desktop) */}
-        <div className="absolute bottom-[35.5vh] md:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto scale-85 md:scale-100 origin-bottom">
+        {/* Floating Bottom-Center View Presets (Desktop Only) */}
+        <div className="hidden md:block absolute md:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
           <ViewPresets />
         </div>
       </main>
