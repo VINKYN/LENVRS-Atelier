@@ -36,40 +36,65 @@ function Loader() {
   );
 }
 
-// 100% Identical Screen-Pipeline Snapshot Bridge in Perfect Front View
+// Device-Independent Ultra-HD Studio Snapshot Bridge (Exact same output on PC & Mobile)
 function CanvasSnapshotBridge() {
-  const { gl, scene, camera } = useThree();
+  const { gl, scene } = useThree();
   const setCaptureHandler = useCustomizerStore(state => state.setCaptureHandler);
 
   useEffect(() => {
     setCaptureHandler(() => {
       try {
-        // 1. Save active interactive camera state
-        const originalPos = camera.position.clone();
-        const originalRot = camera.rotation.clone();
+        const width = 1200;
+        const height = 1200;
 
-        // 2. Set camera to Optimal Front View with zero cropping (collar & hem fully visible)
-        camera.position.set(0, -0.01, 2.50);
-        camera.lookAt(0, -0.01, 0);
-        camera.updateProjectionMatrix();
+        // 1. Dedicated Studio Snapshot Camera (Aspect 1.0, 50mm FOV 28°)
+        const snapshotCamera = new THREE.PerspectiveCamera(28, 1.0, 0.1, 50);
+        snapshotCamera.position.set(0, -0.01, 2.50);
+        snapshotCamera.lookAt(0, -0.01, 0);
+        snapshotCamera.updateProjectionMatrix();
 
-        // 3. Render directly to screen buffer (exact tone mapping & lighting pipeline)
-        gl.render(scene, camera);
-        const dataUrl = gl.domElement.toDataURL('image/png');
+        // 2. High-precision Offscreen WebGLRenderTarget
+        const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+          format: THREE.RGBAFormat,
+          type: THREE.UnsignedByteType,
+          colorSpace: THREE.SRGBColorSpace,
+          samples: 4
+        });
 
-        // 4. Restore original camera position
-        camera.position.copy(originalPos);
-        camera.rotation.copy(originalRot);
-        camera.updateProjectionMatrix();
-        gl.render(scene, camera);
+        // 3. Render scene offscreen with studio lighting & materials
+        const originalRenderTarget = gl.getRenderTarget();
+        gl.setRenderTarget(renderTarget);
+        gl.clear();
+        gl.render(scene, snapshotCamera);
+        gl.setRenderTarget(originalRenderTarget);
 
-        return dataUrl;
+        // 4. Extract pixel buffer from GPU
+        const pixelBuffer = new Uint8Array(width * height * 4);
+        gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixelBuffer);
+        renderTarget.dispose();
+
+        // 5. Flip Y axis into 2D Canvas buffer (WebGL Y inversion fix)
+        const canvas2d = document.createElement('canvas');
+        canvas2d.width = width;
+        canvas2d.height = height;
+        const ctx2d = canvas2d.getContext('2d');
+        const imgData = ctx2d.createImageData(width, height);
+
+        for (let y = 0; y < height; y++) {
+          const srcY = height - 1 - y;
+          const srcRowStart = srcY * width * 4;
+          const dstRowStart = y * width * 4;
+          imgData.data.set(pixelBuffer.subarray(srcRowStart, srcRowStart + width * 4), dstRowStart);
+        }
+
+        ctx2d.putImageData(imgData, 0, 0);
+        return canvas2d.toDataURL('image/png');
       } catch (err) {
         console.error('Snapshot capture error:', err);
         return null;
       }
     });
-  }, [gl, scene, camera, setCaptureHandler]);
+  }, [gl, scene, setCaptureHandler]);
 
   return null;
 }
