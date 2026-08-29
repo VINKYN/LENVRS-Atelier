@@ -47,7 +47,7 @@ function getLightestSoftenedTones(colors) {
   const uniqueHexes = Array.from(new Set(fabricHexes));
 
   if (uniqueHexes.length === 0) {
-    return { c1: '#ffffff', c2: '#c8ced8' };
+    return { c1: '#ffffff', c2: '#dce0e8' };
   }
 
   // 2. Sort by perceived luminance descending (absolute lightest fabric first)
@@ -55,16 +55,16 @@ function getLightestSoftenedTones(colors) {
   const absoluteLightest = uniqueHexes[0];
   const tintRgb = hexToRgb(absoluteLightest);
 
-  // 3. Base Illustrator Studio Satin Palette (Rich metallic contrast as in Photo 2)
+  // 3. Base Light Studio Palette (Ultra-luminous and soft as before)
   const base1 = [255, 255, 255]; // Pure white highlight
-  const base2 = [200, 206, 216]; // Studio satin silver depth (#c8ced8)
+  const base2 = [220, 224, 232]; // Soft luminous silver (#dce0e8)
 
   // If pure white / silver
   if (tintRgb[0] > 245 && tintRgb[1] > 245 && tintRgb[2] > 245) {
-    return { c1: '#ffffff', c2: '#c8ced8' };
+    return { c1: '#ffffff', c2: '#dce0e8' };
   }
 
-  // 4. Inject a delicate 18% - 24% tint wash into the luxury satin base
+  // 4. Inject a delicate 18% - 24% tint wash into the luxury base
   const c1Rgb = mixRgb(base1, tintRgb, 0.18);
   const c2Rgb = mixRgb(base2, tintRgb, 0.25);
 
