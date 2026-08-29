@@ -39,7 +39,7 @@ export default function ShareModal() {
 
   if (!isShareModalOpen) return null;
 
-  // 1. Direct Download Story Render Image (No confetti)
+  // 1. Direct Download Story Render Image
   const handleDownload = () => {
     if (!storyCardUrl) return;
     const a = document.createElement('a');
@@ -48,7 +48,7 @@ export default function ShareModal() {
     a.click();
   };
 
-  // 2. Share to Instagram
+  // 2. Share to Instagram / Native Web Share
   const handleShareInstagram = async () => {
     if (storyCardUrl && navigator.canShare) {
       try {
@@ -81,65 +81,68 @@ export default function ShareModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn">
-      {/* Modal Container (Sharp Pure Rectangle) */}
-      <div className="relative w-full max-w-md bg-white rounded-none p-6 sm:p-7 shadow-2xl flex flex-col items-center border border-[#e5e5e5]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-xs animate-fadeIn">
+      {/* Modal Container: Mobile Bottom Sheet + Desktop Centered Modal */}
+      <div className="relative w-full max-w-md bg-white rounded-t-2xl sm:rounded-none p-4 pt-3 sm:p-7 shadow-2xl flex flex-col items-center border-t sm:border border-[#e5e5e5] max-h-[92vh] sm:max-h-none overflow-y-auto">
+        {/* Mobile Pull Pill */}
+        <div className="w-10 h-1 bg-[#d1d1d6] rounded-full mb-3 sm:hidden" />
+
         {/* Close Button */}
         <button
           onClick={() => setShareModalOpen(false)}
-          className="absolute top-5 right-5 p-2 rounded-none text-[#707072] hover:text-[#111111] hover:bg-[#f5f5f5] transition-all"
+          className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 rounded-full sm:rounded-none text-[#707072] hover:text-[#111111] hover:bg-[#f5f5f5] transition-all active:scale-90"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <h2 className="text-lg font-bold text-[#111111] tracking-tight text-center">
+        <h2 className="text-base sm:text-lg font-bold text-[#111111] tracking-tight text-center">
           Votre Pièce Sur-Mesure
         </h2>
-        <p className="text-xs text-[#707072] text-center mt-0.5 mb-4">
+        <p className="text-[11px] sm:text-xs text-[#707072] text-center mt-0.5 mb-2.5 sm:mb-4">
           Édition officielle au format Story Instagram 9:16
         </p>
 
         {/* Instagram Handle Input */}
-        <div className="w-full mb-3.5">
-          <label className="block text-[10px] font-semibold tracking-wider text-[#707072] uppercase mb-1.5 font-sans">
+        <div className="w-full mb-2.5 sm:mb-3.5">
+          <label className="block text-[9px] sm:text-[10px] font-semibold tracking-wider text-[#707072] uppercase mb-1 font-sans">
             Personnaliser la signature
           </label>
           <div className="relative flex items-center">
-            <AtSign className="absolute left-3 w-4 h-4 text-[#8e8e93]" />
+            <AtSign className="absolute left-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8e8e93]" />
             <input
               type="text"
               value={instagramHandle.replace(/^@/, '')}
               onChange={(e) => setInstagramHandle(e.target.value)}
               placeholder="votre_pseudo_instagram"
-              className="w-full pl-9 pr-4 py-2 bg-[#f6f6f8] border border-[#e5e5e5] rounded-none text-xs text-[#111111] placeholder-[#a0a0a5] focus:outline-none focus:border-black font-sans transition-all"
+              className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 bg-[#f6f6f8] border border-[#e5e5e5] rounded-lg sm:rounded-none text-xs text-[#111111] placeholder-[#a0a0a5] focus:outline-none focus:border-black font-sans transition-all"
             />
           </div>
         </div>
 
         {/* Story Format Preview Card */}
-        <div className="relative w-full flex items-center justify-center max-h-[340px] mb-5 overflow-hidden rounded-none bg-[#eff1f5] border border-[#e5e5e5] p-2 shadow-inner">
+        <div className="relative w-full flex items-center justify-center max-h-[38vh] sm:max-h-[340px] mb-3 sm:mb-5 overflow-hidden rounded-lg sm:rounded-none bg-[#f6f7f9] border border-[#e5e5e5] p-2 shadow-inner">
           {isGenerating ? (
-            <div className="flex flex-col items-center gap-3 py-16">
-              <div className="w-8 h-8 rounded-none border-2 border-[#111111]/20 border-t-[#111111] animate-spin" />
+            <div className="flex flex-col items-center gap-2.5 py-12 sm:py-16">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-[#111111]/20 border-t-[#111111] animate-spin" />
               <span className="text-xs font-medium text-[#707072]">Génération de l'édition...</span>
             </div>
           ) : storyCardUrl ? (
             <img
               src={storyCardUrl}
               alt="Story 9:16 Preview"
-              className="max-h-[320px] w-auto object-contain rounded-none shadow-md aspect-[9/16]"
+              className="max-h-[36vh] sm:max-h-[320px] w-auto object-contain rounded-sm sm:rounded-none shadow-md aspect-[9/16]"
             />
           ) : (
-            <div className="text-xs text-[#8e8e93] py-12">Visuel en cours de préparation...</div>
+            <div className="text-xs text-[#8e8e93] py-10 sm:py-12">Visuel en cours de préparation...</div>
           )}
         </div>
 
-        {/* Action Buttons (Sharp Pure Rectangles) */}
-        <div className="flex flex-col gap-2 w-full">
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2 w-full pb-1 sm:pb-0">
           <button
             onClick={handleDownload}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-none bg-[#111111] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all active:scale-98 shadow-md"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl sm:rounded-none bg-[#111111] text-white font-medium text-xs sm:text-sm hover:bg-black transition-all active:scale-98 shadow-md"
           >
             <Download className="w-4 h-4" />
             <span>Télécharger la Story HD</span>
@@ -148,7 +151,7 @@ export default function ShareModal() {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleShareInstagram}
-              className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-none bg-[#f6f6f6] border border-[#e5e5e5] text-[#111111] font-medium text-xs hover:bg-[#ececec] transition-all active:scale-98"
+              className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg sm:rounded-none bg-[#f6f6f6] border border-[#e5e5e5] text-[#111111] font-medium text-xs hover:bg-[#ececec] transition-all active:scale-98"
             >
               <Instagram className="w-4 h-4" />
               <span>Instagram</span>
@@ -156,7 +159,7 @@ export default function ShareModal() {
 
             <button
               onClick={handleSendEmail}
-              className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-none bg-[#f6f6f6] border border-[#e5e5e5] text-[#111111] font-medium text-xs hover:bg-[#ececec] transition-all active:scale-98"
+              className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg sm:rounded-none bg-[#f6f6f6] border border-[#e5e5e5] text-[#111111] font-medium text-xs hover:bg-[#ececec] transition-all active:scale-98"
             >
               <Mail className="w-4 h-4" />
               <span>E-mail</span>
