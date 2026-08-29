@@ -38,11 +38,11 @@ export default function CameraDirector() {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
       const posX = cameraFocus.position[0];
-      const posY = isMobile ? cameraFocus.position[1] - 0.04 : cameraFocus.position[1];
-      const posZ = isMobile ? cameraFocus.position[2] * 1.22 : cameraFocus.position[2];
+      const posY = isMobile ? cameraFocus.position[1] + 0.22 : cameraFocus.position[1];
+      const posZ = isMobile ? cameraFocus.position[2] * 1.48 : cameraFocus.position[2];
 
       const tgtX = cameraFocus.target[0];
-      const tgtY = isMobile ? cameraFocus.target[1] - 0.04 : cameraFocus.target[1];
+      const tgtY = isMobile ? cameraFocus.target[1] + 0.22 : cameraFocus.target[1];
       const tgtZ = cameraFocus.target[2];
 
       targetPosition.current.set(posX, posY, posZ);

@@ -54,64 +54,58 @@ export default function App() {
         {/* 3D Canvas */}
         <TShirtViewer />
 
-        {/* MOBILE TOP CONTROLS BAR: Logo + Action Buttons + StepNavigation Header */}
-        <div className="absolute top-0 left-0 right-0 z-30 md:hidden bg-white/95 backdrop-blur-xs border-b border-[#e5e5e5] px-3.5 pt-2.5 pb-2 flex flex-col gap-2">
-          {/* Row 1: Logo & Action Buttons */}
-          <div className="flex items-center justify-between">
-            <img
-              src={`${import.meta.env.BASE_URL}logo.png`}
-              alt="LENVRS Atelier"
-              className="h-7 w-auto object-contain select-none"
-              draggable={false}
-            />
+        {/* MOBILE TOP CONTROLS BAR: Logo + Action Buttons */}
+        <div className="absolute top-3 left-4 right-4 z-20 md:hidden flex items-center justify-between pointer-events-auto">
+          <img
+            src={`${import.meta.env.BASE_URL}logo.png`}
+            alt="LENVRS Atelier"
+            className="h-8 w-auto object-contain select-none"
+            draggable={false}
+          />
 
-            <div className="flex items-center gap-1.5">
-              {/* Undo / Redo */}
-              <div className="flex items-center bg-white border border-[#e5e5e5] rounded-none p-0.5 shadow-2xs">
-                <button
-                  onClick={undo}
-                  disabled={historyPast.length === 0}
-                  className="p-1 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 transition-all"
-                  title="Annuler"
-                >
-                  <Undo2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={redo}
-                  disabled={historyFuture.length === 0}
-                  className="p-1 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 transition-all"
-                  title="Rétablir"
-                >
-                  <Redo2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* 360° */}
+          <div className="flex items-center gap-1.5">
+            {/* Undo / Redo */}
+            <div className="flex items-center bg-white/95 border border-[#e5e5e5] rounded-none p-0.5 shadow-2xs backdrop-blur-xs">
               <button
-                onClick={toggleAutoRotate}
-                className={`px-2 py-1 rounded-none border text-[11px] font-bold tracking-tight transition-all active:scale-95 shadow-2xs ${
-                  autoRotate
-                    ? 'bg-[#111111] text-white border-[#111111]'
-                    : 'bg-white border-[#e5e5e5] text-[#111111]'
-                }`}
-                title="360°"
+                onClick={undo}
+                disabled={historyPast.length === 0}
+                className="p-1 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 transition-all"
+                title="Annuler"
               >
-                360°
+                <Undo2 className="w-3.5 h-3.5" />
               </button>
-
-              {/* Terminé */}
               <button
-                onClick={() => setShareModalOpen(true)}
-                className="flex items-center gap-1 px-3 py-1 rounded-none bg-[#111111] text-white font-medium text-xs tracking-wide hover:bg-black transition-all active:scale-95 shadow-2xs"
+                onClick={redo}
+                disabled={historyFuture.length === 0}
+                className="p-1 rounded-none text-[#111111] hover:bg-[#f0f0f0] disabled:opacity-25 transition-all"
+                title="Rétablir"
               >
-                <Share2 className="w-3 h-3" />
-                <span>Terminé</span>
+                <Redo2 className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
 
-          {/* Row 2: Mobile StepNavigation at top */}
-          <StepNavigation isMobile={true} />
+            {/* 360° */}
+            <button
+              onClick={toggleAutoRotate}
+              className={`px-2 py-1 rounded-none border text-[11px] font-bold tracking-tight transition-all active:scale-95 shadow-2xs ${
+                autoRotate
+                  ? 'bg-[#111111] text-white border-[#111111]'
+                  : 'bg-white/95 border-[#e5e5e5] text-[#111111] backdrop-blur-xs'
+              }`}
+              title="360°"
+            >
+              360°
+            </button>
+
+            {/* Terminé */}
+            <button
+              onClick={() => setShareModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-1 rounded-none bg-[#111111] text-white font-medium text-xs tracking-wide hover:bg-black transition-all active:scale-95 shadow-2xs"
+            >
+              <Share2 className="w-3 h-3" />
+              <span>Terminé</span>
+            </button>
+          </div>
         </div>
 
         {/* DESKTOP FLOATING CONTROLS (Untouched) */}
@@ -170,8 +164,8 @@ export default function App() {
           </button>
         </div>
 
-        {/* Floating Bottom-Center View Presets (Floats above bottom palette on mobile, standard on desktop) */}
-        <div className="absolute bottom-[26.5vh] md:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto scale-85 md:scale-100 origin-bottom">
+        {/* Floating Bottom-Center View Presets (Floats cleanly above 34vh drawer on mobile, standard on desktop) */}
+        <div className="absolute bottom-[35.5vh] md:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto scale-85 md:scale-100 origin-bottom">
           <ViewPresets />
         </div>
       </main>
@@ -187,7 +181,7 @@ export default function App() {
         <ColorPalette />
       </aside>
 
-      {/* MOBILE BOTTOM DRAWER (Mobile: compact 25vh palette) */}
+      {/* MOBILE BOTTOM DRAWER (Mobile: 34vh drawer containing StepNavigation + compact Palette) */}
       <MobileDrawer />
 
       {/* SHARE / EXPORT MODAL */}
