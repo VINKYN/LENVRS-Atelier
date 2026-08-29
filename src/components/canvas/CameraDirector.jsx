@@ -16,7 +16,7 @@ export default function CameraDirector() {
   const targetPosition = useRef(
     new THREE.Vector3(
       cameraFocus?.position?.[0] ?? 0,
-      (cameraFocus?.position?.[1] ?? -0.05) - (isMobileInitial ? 0.35 : 0),
+      (cameraFocus?.position?.[1] ?? -0.05) - (isMobileInitial ? 0.40 : 0),
       (cameraFocus?.position?.[2] ?? 4.4) * (isMobileInitial ? 1.35 : 1)
     )
   );
@@ -24,7 +24,7 @@ export default function CameraDirector() {
   const targetLookAt = useRef(
     new THREE.Vector3(
       cameraFocus?.target?.[0] ?? 0,
-      (cameraFocus?.target?.[1] ?? -0.08) - (isMobileInitial ? 0.35 : 0),
+      (cameraFocus?.target?.[1] ?? -0.08) - (isMobileInitial ? 0.40 : 0),
       cameraFocus?.target?.[2] ?? 0
     )
   );
@@ -41,11 +41,11 @@ export default function CameraDirector() {
 
       // Lowering camera and lookAt target lifts the 3D model UP in screen space into the upper 2/3 area
       const posX = cameraFocus.position[0];
-      const posY = isMobile ? cameraFocus.position[1] - 0.35 : cameraFocus.position[1];
+      const posY = isMobile ? cameraFocus.position[1] - 0.40 : cameraFocus.position[1];
       const posZ = isMobile ? cameraFocus.position[2] * 1.35 : cameraFocus.position[2];
 
       const tgtX = cameraFocus.target[0];
-      const tgtY = isMobile ? cameraFocus.target[1] - 0.35 : cameraFocus.target[1];
+      const tgtY = isMobile ? cameraFocus.target[1] - 0.40 : cameraFocus.target[1];
       const tgtZ = cameraFocus.target[2];
 
       targetPosition.current.set(posX, posY, posZ);
